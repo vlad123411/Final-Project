@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        #chooser {
+            position: absolute;
+            top: 50px;
+            left: 525px;
+            font-size: 40px;
+        }
+        #startBtn {
+            position: absolute;
+            border-radius: 35px;
+            top: 260px;
+            left: 550px;
+            width: 260px;
+            height: 100px;
+            font-size: 20px;
+        }
+        #startBtn2 {
+            position: absolute;
+            border-radius: 35px;
+            top: 150px;
+            left: 550px;
+            width: 260px;
+            height: 100px;
+            font-size: 20px;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        td {
+            background-color: black;
+            border: 3px solid white;
+            font-size: 80px;
+            color: #ffffff;
+            border-radius: 10px 10px 10px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="chooser">Choose The Game</h1>
+    <div id="tictactoe"></div>
+    <div align="left"></div>
+    <button type="button" id="startBtn" onclick="initialize()">BREAKOUT</button>
+    <button type="button" id="startBtn2" onclick="initialize2()">TIC-TAC-TOE</button>
+
+
+
+<canvas id="myCanvas" width="670" height="500"></canvas>
+
+<script>
+    let canvas = document.getElementById("myCanvas");
+    let ctx = canvas.getContext("2d");
+    let start = document.getElementById("startBtn");
+    let start2 = document.getElementById("startBtn2");
+    let header = document.getElementById("chooser");
+    let ballRadius = 10;
+    let x = canvas.width/2;
+    let y = canvas.height-30;
+    let dx = 5;
+    let dy = -5;
+    let paddleHeight = 10;
+    let paddleWidth = 75;
+    let paddleX = (canvas.width-paddleWidth)/2;
+    let rightPressed = false;
+    let leftPressed = false;
+    let brickRowCount = 6;
+    let brickColumnCount = 4;
+    let brickWidth = 95;
+    let brickHeight = 30;
+    let brickPadding = 10;
+    let brickOffsetTop = 30;
+    let brickOffsetLeft = 30;
+    let score = 0;
+    let lives = 3;
+    let bricks = [];
+    
+    const BG = new Image();
+    BG.src = 'https://i.ytimg.com/vi/XaQD2-MxBC4/maxresdefault.jpg';
+    function initialize(){
+        start.style.display = "none";
+        start2.style.display = "none";
+        header.style.display = "none";
+    for(let c=0; c<brickColumnCount; c++) {
+        bricks[c] = [];
+        for(let r=0; r<brickRowCount; r++) {
+            bricks[c][r] = { x: 0, y: 0, status: 1 };
+        }
+    }
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+    function keyDownHandler(e) {
+        if(e.keyCode == 39) {
+            rightPressed = true;
+        }
+        else if(e.keyCode == 37) {
+            leftPressed = true;
+        }  
+    }
+    function keyUpHandler(e) {
+        if(e.keyCode == 39) {
+            rightPressed = false;
+        }
+        else if(e.keyCode == 37) {
+            leftPressed = false;
+        }
+    }
+    function collision() {
+        for(let c=0; c<brickColumnCount; c++) {
+            for(let r=0; r<brickRowCount; r++) {
+                let b = bricks[c][r];
+                if(b.status == 1) {
+                    if(x > b.x && x < b.x+brickWidth+10 && y > b.y && y < b.y+brickHeight+2) {
+                        dy = -dy;
+                        b.status = 0;
+                        score++;
+                        if(score == brickRowCount*brickColumnCount) {
+                            alert("YOU WON, CONGRATULATIONS!");
+                            document.location.reload();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    function drawBall() {
+        ctx.beginPath();
+        ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+        ctx.fillStyle = "#9F0FFF";
+        ctx.fill();
+        ctx.closePath();
+    }
+    function drawPaddle() {
+        ctx.beginPath();
+        ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+        ctx.fillStyle = "#1ABE64";
+        ctx.fill();
+        ctx.closePath();
+    }
+    function drawBricks() {
+        for(let c=0; c<brickColumnCount; c++) {
+            for(let r=0; r<brickRowCount; r++) {
+                if(bricks[c][r].status == 1) {
+                    let brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                    let brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                    bricks[c][r].x = brickX;
+                    bricks[c][r].y = brickY;
+                    ctx.beginPath();
+                    ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                    ctx.fillStyle = "#0095DD";
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+        }
+    }
+    function drawScore() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText("Score: "+score, 8, 20);
+    }
+    function drawLives() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+    }
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(BG, 0, 0, canvas.width, canvas.height);
+        drawBricks();
+        drawBall();
+        drawPaddle();
+        drawScore();
+        drawLives();
+        collision();
+        if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+            dx = -dx;
+        }
+        if(y + dy < ballRadius) {
+            dy = -dy;
+        }
+        else if(y + dy > canvas.height-ballRadius) {
+            if(x > paddleX && x < paddleX + paddleWidth) {
+                dy = -dy;
+            }
+            else {
+                lives--;
+                if(!lives) {
+                    alert("GAME OVER");
+                    document.location.reload();
+                }
+                else {
+                    x = canvas.width/2;
+                    y = canvas.height-30;
+                    dx = 5;
+                    dy = -5;
+                    paddleX = (canvas.width-paddleWidth)/2;
+                }
+            }
+        }
+        if(rightPressed && paddleX < canvas.width-paddleWidth) {
+            paddleX += 7;
+        }
+        else if(leftPressed && paddleX > 0) {
+            paddleX -= 7;
+        }
+        x += dx;
+        y += dy;
+        requestAnimationFrame(draw);
+    }
+    draw();
+}
+    function initialize2(){
+        start.style.display = "none";
+        start2.style.display = "none";
+        header.style.display = "none";
+        let size = 3,
+        empty = "&nbsp;",
+        boxes = [],
+        turn = "X",
+        score,
+        moves;
+    function init() {
+        let board = document.createElement("table");
+        board.setAttribute("border", 1);
+        board.setAttribute("cellspacing", 0);
+    let identifier = 1;
+        for (let i = 0; i < size; i++) {
+    let row = document.createElement("tr");
+    board.appendChild(row);
+        for (let j = 0; j < size; j++) {
+            let cell = document.createElement("td");
+            cell.setAttribute("height", 120);
+            cell.setAttribute("width", 120);
+            cell.setAttribute("align", "center");
+            cell.setAttribute("valign", "center");
+            cell.classList.add("col" + j, "row" + i);
+        if (i == j) {
+            cell.classList.add("diagonal0");
+        }
+        if (j == size - i - 1) {
+            cell.classList.add("diagonal1");
+        }
+            cell.identifier = identifier;
+            cell.addEventListener("click", set);
+            row.appendChild(cell);
+            boxes.push(cell);
+            identifier += identifier;
+        }
+    }
+    document.getElementById("tictactoe").appendChild(board);
+    startNewGame();
+    }
+    function startNewGame() {
+        score = {
+        X: 0,
+        O: 0
+    };
+    moves = 0;
+    turn = "X";
+    boxes.forEach(function(square) {
+    square.innerHTML = empty;
+  });
+}
+    function win(clicked) {
+        let memberOf = clicked.className.split(/\s+/);
+        for (let i = 0; i < memberOf.length; i++) {
+        let testClass = "." + memberOf[i];
+        let items = contains("#tictactoe " + testClass, turn);
+        if (items.length == size) {
+            return true;
+        }
+    }
+    return false;
+}
+    function contains(selector, text) {
+        let elements = document.querySelectorAll(selector);
+        return [].filter.call(elements, function(element) {
+        return RegExp(text).test(element.textContent);
+    });
+    }
+    function set() {
+        if (this.innerHTML !== empty) {
+    return;
+  }
+    this.innerHTML = turn;
+    moves += 1;
+    score[turn] += this.identifier;
+    if (win(this)) {
+        alert("Winner: Player " + turn);
+        startNewGame();
+    } else if (moves === size * size) {
+        alert("Draw");
+        startNewGame();
+    } else {
+        turn = turn === "X" ? "O" : "X";
+        document.getElementById("turn").textContent = "Player " + turn;
+    }
+    }
+    init();
+    }
+</script>
+
+
+</body>
+</html>
